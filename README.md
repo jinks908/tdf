@@ -4,6 +4,10 @@ Personal fork of [itsjunetime/tdf](https://github.com/itsjunetime/tdf).
 
 ## Changes from upstream
 
+### Change: Scroll speed
+Vertical pan/scroll speed (in zoomed mode) was increased from:
+    `const PAN_STEP_Y: i16 = 1;` to `const PAN_STEP_Y: i16 = 6;`
+
 ### Fix: GoToPage (`g`)
 The `g` keybind to jump to a specific page was broken (always jumped to page 0). Fixed by removing an unnecessary `is_kitty` guard.
 
