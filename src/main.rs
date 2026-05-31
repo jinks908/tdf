@@ -116,6 +116,10 @@ async fn inner_main() -> Result<(), WrappedErr> {
 		optional -w,--white-color white: String
 		/// Custom black color, specified in css format (e.g "000000" or "rgb(0, 0, 0)")
 		optional -b,--black-color black: String
+		/// Custom white color used when colors are inverted (defaults to swapping --black-color)
+		optional -W,--inv-white-color inv_white: String
+		/// Custom black color used when colors are inverted (defaults to swapping --white-color)
+		optional -B,--inv-black-color inv_black: String
 		/// Print the version and exit
 		optional --version
 		/// PDF file to read
@@ -168,6 +172,38 @@ async fn inner_main() -> Result<(), WrappedErr> {
 		})
 		.transpose()?
 		.unwrap_or(MUPDF_WHITE);
+
+	let inv_black = flags
+		.inv_black_color
+		.as_deref()
+		.map(|color| {
+			parse_color_to_i32(color).map_err(|e| {
+				WrappedErr(
+					format!(
+						"Couldn't parse inverted black color {color:?}: {e} - is it formatted like a CSS color?"
+					)
+					.into()
+				)
+			})
+		})
+		.transpose()?
+		.unwrap_or(white);
+
+	let inv_white = flags
+		.inv_white_color
+		.as_deref()
+		.map(|color| {
+			parse_color_to_i32(color).map_err(|e| {
+				WrappedErr(
+					format!(
+						"Couldn't parse inverted white color {color:?}: {e} - is it formatted like a CSS color?"
+					)
+					.into()
+				)
+			})
+		})
+		.transpose()?
+		.unwrap_or(black);
 
 	// need to keep it around throughout the lifetime of the program, but don't rly need to use it.
 	// Just need to make sure it doesn't get dropped yet.
@@ -286,7 +322,9 @@ async fn inner_main() -> Result<(), WrappedErr> {
 			cell_width_px,
 			prerender,
 			black,
-			white
+			white,
+			inv_black,
+			inv_white
 		)
 	});
 

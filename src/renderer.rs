@@ -96,7 +96,9 @@ pub fn start_rendering(
 	col_w: u16,
 	prerender: PrerenderLimit,
 	black: i32,
-	white: i32
+	white: i32,
+	inv_black: i32,
+	inv_white: i32
 ) -> Result<(), SendError<Result<RenderInfo, RenderError>>> {
 	// We want this outside of 'reload so that if the doc reloads, the search term that somebody
 	// set will still get highlighted in the reloaded doc
@@ -329,6 +331,8 @@ pub fn start_rendering(
 					invert,
 					black,
 					white,
+					inv_black,
+					inv_white,
 					fit_or_fill,
 					rotate,
 					(area_w, area_h)
@@ -484,6 +488,8 @@ fn render_single_page_to_ctx(
 	invert: bool,
 	black: i32,
 	white: i32,
+	inv_black: i32,
+	inv_white: i32,
 	fit_or_fill: FitOrFill,
 	rotate: RotateDirection,
 	(area_w, area_h): (f32, f32)
@@ -528,7 +534,7 @@ fn render_single_page_to_ctx(
 
 	let mut pixmap = page.to_pixmap(&matrix, &colorspace, false, false)?;
 	if invert {
-		pixmap.tint(white, black)?;
+		pixmap.tint(inv_black, inv_white)?;
 	} else if black != MUPDF_BLACK || white != MUPDF_WHITE {
 		pixmap.tint(black, white)?;
 	}

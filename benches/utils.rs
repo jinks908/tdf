@@ -97,7 +97,9 @@ pub fn start_rendering_loop(
 			cell_width_px,
 			tdf::PrerenderLimit::All,
 			black,
-			white
+			white,
+			white,
+			black
 		)
 	});
 
