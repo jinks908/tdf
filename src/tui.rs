@@ -740,7 +740,7 @@ impl Tui {
 					}
 					KeyCode::Char(c)
 						if let BottomMessage::Input(InputCommand::GoToPage(ref mut page)) =
-							self.bottom_msg && matches!(c, 'g' if self.is_kitty) =>
+							self.bottom_msg =>
 						c.to_digit(10).map(|input_num| {
 							*page = (*page * 10) + input_num as usize;
 							InputAction::Redraw
