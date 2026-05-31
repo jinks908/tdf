@@ -2,3 +2,5 @@
 debug.log
 /.envrc
 /.direnv/
+TODO.md
+.DS_Store

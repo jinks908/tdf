@@ -753,9 +753,9 @@ impl Tui {
 						self.update_zoom(Zoom::pan_bottom)
 					}
 					KeyCode::Char(c) => match c {
-						'l' => self.change_page(PageChange::Next, ChangeAmount::Single),
-						'j' => self.change_page(PageChange::Next, ChangeAmount::WholeScreen),
-						'h' => self.change_page(PageChange::Prev, ChangeAmount::Single),
+						';' => self.change_page(PageChange::Next, ChangeAmount::Single),
+						'l' => self.change_page(PageChange::Next, ChangeAmount::WholeScreen),
+						'j' => self.change_page(PageChange::Prev, ChangeAmount::Single),
 						'k' => self.change_page(PageChange::Prev, ChangeAmount::WholeScreen),
 						'q' => Some(InputAction::QuitApp),
 						'g' => {
@@ -850,9 +850,9 @@ impl Tui {
 						}
 						'o' if can_zoom => self.update_zoom(Zoom::step_in),
 						'O' if can_zoom => self.update_zoom(Zoom::step_out),
-						'L' if can_zoom => self.update_zoom(|z| z.pan(Direction::Right)),
-						'H' if can_zoom => self.update_zoom(|z| z.pan(Direction::Left)),
-						'J' if can_zoom => self.update_zoom(|z| z.pan(Direction::Down)),
+						':' if can_zoom => self.update_zoom(|z| z.pan(Direction::Right)),
+						'J' if can_zoom => self.update_zoom(|z| z.pan(Direction::Left)),
+						'L' if can_zoom => self.update_zoom(|z| z.pan(Direction::Down)),
 						'K' if can_zoom => self.update_zoom(|z| z.pan(Direction::Up)),
 						'G' if can_zoom => self.update_zoom(Zoom::pan_top),
 						'0' if can_zoom => self.update_zoom(Zoom::pan_left),
@@ -1092,9 +1092,9 @@ impl Tui {
 }
 
 static HELP_PAGE: &str = "\
-l, h, left, right:
+j, ;, left, right:
     Go forward/backwards a single page
-j, k, down, up:
+l, k, down, up:
     Go forwards/backwards a screen's worth of pages
 q, esc:
     Quit
@@ -1122,7 +1122,7 @@ o/O (when on fill-screen):
     Zoom in and out, respectively
 gg/G (when on fill-screen):
     Scroll to top/bottom of page
-H, J, K, L (when zoomed in):
+J, K, L, : (when zoomed in):
     Pan direction around page
 0/$ (when on fill-screen):
     Scroll to left/right side of page
