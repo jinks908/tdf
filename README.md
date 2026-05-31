@@ -4,12 +4,15 @@ Personal fork of [itsjunetime/tdf](https://github.com/itsjunetime/tdf).
 
 ## Changes from upstream
 
+### Fix: `gg` hang-up when attempting to jump to top of page
+The `gg` keybind to jump to the first page was broken. The old GoToPage function returned `None` for non-digits without dismissing the GoToPage state, which froze the app. Fixed by allowing an integer as well as `g` to be passed, while dismissing the state for any other non-digit.
+
 ### Change: Scroll speed
 Vertical pan/scroll speed (in zoomed mode) was increased from:
     `const PAN_STEP_Y: i16 = 1;` to `const PAN_STEP_Y: i16 = 6;`
 
 ### Fix: GoToPage (`g`)
-The `g` keybind to jump to a specific page was broken (always jumped to page 0). Fixed by removing an unnecessary `is_kitty` guard.
+The `g` keybind to jump to a specific page was broken. Fixed by removing an unnecessary `is_kitty` guard.
 
 ### Remapped keybindings
 Motion and zoom-pan keys were remapped according to my personal Vim motions.

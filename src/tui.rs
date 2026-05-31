@@ -742,16 +742,17 @@ impl Tui {
 					KeyCode::Char(c)
 						if let BottomMessage::Input(InputCommand::GoToPage(ref mut page)) =
 							self.bottom_msg =>
-						c.to_digit(10).map(|input_num| {
-							*page = (*page * 10) + input_num as usize;
-							InputAction::Redraw
-						}),
-					KeyCode::Char(_)
-						if let BottomMessage::Input(InputCommand::GoToPage(_)) =
-							self.bottom_msg =>
 					{
-						self.set_msg(MessageSetting::Pop);
-						self.update_zoom(Zoom::pan_bottom)
+						if let Some(input_num) = c.to_digit(10) {
+							*page = (*page * 10) + input_num as usize;
+							Some(InputAction::Redraw)
+						} else if c == 'g' && *page == 0 {
+							self.set_msg(MessageSetting::Pop);
+							self.update_zoom(Zoom::pan_bottom)
+						} else {
+							self.set_msg(MessageSetting::Pop);
+							None
+						}
 					}
 					KeyCode::Char(c) => match c {
 						';' => self.change_page(PageChange::Next, ChangeAmount::Single),
