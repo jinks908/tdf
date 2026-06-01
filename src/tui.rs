@@ -624,6 +624,12 @@ impl Tui {
 		};
 	}
 
+	pub fn clear_rendered_images(&mut self) {
+		for slot in &mut self.rendered {
+			slot.img = None;
+		}
+	}
+
 	pub fn page_failed_display(&mut self, page_num: usize) {
 		self.rendered[page_num].img = None;
 	}

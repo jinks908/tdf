@@ -50,7 +50,8 @@ pub enum RotateDirection {
 pub struct PageInfo {
 	pub img_data: ImageData,
 	pub page_num: usize,
-	pub result_rects: Vec<HighlightRect>
+	pub result_rects: Vec<HighlightRect>,
+	pub invert: bool
 }
 
 #[derive(Clone)]
@@ -108,7 +109,8 @@ pub fn start_rendering(
 	// now, so we just use the values passed in.
 
 	let mut stored_doc = None;
-	let mut invert = false;
+	// Enable inverted mode by default
+	let mut invert = true;
 	let mut rotate = RotateDirection::Deg0;
 	let mut preserved_area = None;
 	let mut fit_or_fill = FitOrFill::Fit;
@@ -361,7 +363,8 @@ pub fn start_rendering(
 								cell_h: (ctx.surface_h / f32::from(col_h)) as u16
 							},
 							page_num,
-							result_rects: ctx.result_rects
+							result_rects: ctx.result_rects,
+							invert
 						})))?;
 					}
 					// And if we got an error, then obviously we need to propagate that

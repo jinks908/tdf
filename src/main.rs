@@ -449,7 +449,11 @@ async fn enter_redraw_loop(
 							to_converter.send(ConverterMsg::GoToPage(page))?;
 						},
 						InputAction::Search(term) => to_renderer.send(RenderNotif::Search(term))?,
-						InputAction::Invert => to_renderer.send(RenderNotif::Invert)?,
+						InputAction::Invert => {
+							to_renderer.send(RenderNotif::Invert)?;
+							to_converter.send(ConverterMsg::ClearImgs)?;
+							tui.clear_rendered_images();
+						}
 						InputAction::Rotate => to_renderer.send(RenderNotif::Rotate)?,
 						InputAction::Fullscreen => fullscreen = !fullscreen,
 						InputAction::SwitchRenderZoom(f_or_f) => {

@@ -4,6 +4,10 @@ Personal fork of [itsjunetime/tdf](https://github.com/itsjunetime/tdf).
 
 ## Changes from upstream
 
+### Feat: Color schemes
+- Enable `invert` mode by default -- `src/renderer.rs:113`
+- Add separate RGB search term highlight colors for normal/inverted modes -- `src/converter.rs:136`
+
 ### Fix: `gg` hang-up when attempting to jump to top of page
 The `gg` keybind to jump to the first page was broken. The old GoToPage function returned `None` for non-digits without dismissing the GoToPage state, which froze the app. Fixed by allowing an integer as well as `g` to be passed, while dismissing the state for any other non-digit.
 

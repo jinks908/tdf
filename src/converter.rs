@@ -63,7 +63,8 @@ pub struct ConvertedPage {
 pub enum ConverterMsg {
 	NumPages(usize),
 	GoToPage(usize),
-	AddImg(PageInfo)
+	AddImg(PageInfo),
+	ClearImgs
 }
 
 pub async fn run_conversion_loop(
@@ -131,7 +132,28 @@ pub async fn run_conversion_loop(
 				.filter(|(x, y, _)| {
 					*x > quad.ul_x && *x < quad.lr_x && *y > quad.ul_y && *y < quad.lr_y
 				})
-				.for_each(|(_, _, px)| px.0[2] = px.0[2].saturating_sub(u8::MAX / 2));
+				.for_each(|(_, _, px)| {
+					if page_info.invert {
+						// Inverted text is white on black, so we need brightness thresholding
+						// to avoid poor highlight rendering on inverted colors
+						let brightness = (px.0[0] as u16 + px.0[1] as u16 + px.0[2] as u16) / 3;
+							if brightness > 25 {
+								// Black
+								px.0[0] = 0;
+								px.0[1] = 0;
+								px.0[2] = 0;
+							} else {
+								// Bright mint
+								px.0[0] = 81;
+								px.0[1] = 219;
+								px.0[2] = 175;
+							}
+					} else {
+						px.0[0] = px.0[0].saturating_sub(u8::MAX - 110);
+						px.0[1] = px.0[1].saturating_sub(u8::MAX - 250);
+						px.0[2] = px.0[2].saturating_sub(u8::MAX - 205);
+					}
+				});
 		}
 
 		let img_area = Rect {
@@ -209,7 +231,12 @@ pub async fn run_conversion_loop(
 				fill_default(images, n_pages);
 				*page = (*page).min(n_pages - 1);
 			}
-			ConverterMsg::GoToPage(new_page) => *page = new_page
+			ConverterMsg::GoToPage(new_page) => *page = new_page,
+			ConverterMsg::ClearImgs => {
+				for slot in images.iter_mut() {
+					*slot = None;
+				}
+			}
 		}
 	}
 
