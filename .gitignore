@@ -4,3 +4,4 @@ debug.log
 /.direnv/
 TODO.md
 .DS_Store
+build
