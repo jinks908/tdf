@@ -863,6 +863,11 @@ impl Tui {
 						'L' if can_zoom => self.update_zoom(|z| z.pan(Direction::Down)),
 						'K' if can_zoom => self.update_zoom(|z| z.pan(Direction::Up)),
 						'G' if can_zoom => self.update_zoom(Zoom::pan_top),
+						'G' => {
+							let last = self.rendered.len().saturating_sub(1);
+							self.set_page(last);
+							Some(InputAction::JumpingToPage(last))
+						}
 						'0' if can_zoom => self.update_zoom(Zoom::pan_left),
 						'$' if can_zoom => self.update_zoom(Zoom::pan_right),
 						'r' => Some(InputAction::Rotate),
@@ -1108,6 +1113,8 @@ q, esc:
     Quit
 g:
     Go to specific page (type numbers after 'g')
+G:
+    Jump to last page
 /:
     Search
 n, N:
@@ -1123,19 +1130,16 @@ ctrl+z:
 ";
 
 static KITTY_HELP: &str = "\
-When using Kitty Protocol:
 z:
     Toggle between fill-screen and fit-screen
-o/O (when on fill-screen):
+o/O (when zoomed):
     Zoom in and out, respectively
-gg/G (when on fill-screen):
+gg/G (when zoomed):
     Scroll to top/bottom of page
-J, K, L, : (when zoomed in):
-    Pan direction around page
-0/$ (when on fill-screen):
-    Scroll to left/right side of page
+J, K, L, : / 0, $ (when zoomed):
+    Pan / scroll to left/right
 r:
-		Rotate by 90 degrees
+	Rotate by 90 degrees
 ";
 
 pub enum InputAction {
