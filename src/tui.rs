@@ -110,7 +110,7 @@ impl Zoom {
 	// TODO: Make this configurable, maybe allow fractional steps?
 	// With fractional steps, it might also be a good idea to have these
 	// have the same ratio as the font aspect ratio.
-	const PAN_STEP_X: i16 = 2;
+	const PAN_STEP_X: i16 = 4;
 	const PAN_STEP_Y: i16 = 6;
 
 	fn pan(&mut self, direction: Direction) {
