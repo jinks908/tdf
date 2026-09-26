@@ -740,7 +740,7 @@ impl Tui {
 				match key.code {
 					KeyCode::Char(c)
 						if let BottomMessage::Input(InputCommand::Search(ref mut term)) =
-							self.bottom_msg =>
+							self.bottom_msg && matches!(c, 'g' if self.is_kitty) =>
 					{
 						term.push(c);
 						InputAction::Redraw.into()
