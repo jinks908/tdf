@@ -7,7 +7,8 @@ use mupdf::{
 use ratatui::layout::Rect;
 
 use crate::{
-	FitOrFill, PrerenderLimit, ScaledResult, scale_img_for_area, skip::InterleavedAroundWithMax
+	FitOrFill, PrerenderLimit, ScaledResult, scale_img_for_area,
+	skip::{InterleavedAroundWithMax, in_prerender_window}
 };
 
 const KITTY_MAX_W_OR_H: f32 = 10_000.0;
@@ -116,6 +117,8 @@ pub fn start_rendering(
 	let mut fit_or_fill = FitOrFill::Fit;
 
 	let mut need_rerender = VecDeque::new();
+	// Kept across reloads so that we keep rendering around the page the user is looking at
+	let mut start_point = 0;
 
 	#[cfg(windows)]
 	let path = path.to_string_lossy();
@@ -180,7 +183,7 @@ pub fn start_rendering(
 		// then we can split at that page and render at both sides of it
 		let mut rendered = Vec::new();
 		fill_default::<PrevRender>(&mut rendered, n_pages.get());
-		let mut start_point = 0;
+		start_point = start_point.min(n_pages.get() - 1);
 
 		// This is kinda a weird way of doing this, but if we get a notification that the area
 		// changed, we want to start re-rending all of the pages, but we don't want to reload the
@@ -228,6 +231,15 @@ pub fn start_rendering(
 							},
 						RenderNotif::JumpToPage(page) => {
 							start_point = page;
+							// The converter drops pages outside of the prerender window, so they
+							// need to be re-rendered if we come back to them
+							if let PrerenderLimit::Limited(limit) = prerender {
+								for (idx, r) in rendered.iter_mut().enumerate() {
+									if !in_prerender_window(idx, page, n_pages, limit) {
+										r.successful = false;
+									}
+								}
+							}
 							continue 'render_pages;
 						}
 						RenderNotif::PageNeedsReRender(page) => {

@@ -127,6 +127,8 @@ pub fn start_converting_loop(
 		from_main_rx,
 		picker,
 		prerender,
+		// the renderer prerenders everything here, so never evict
+		None,
 		// just assume shms work for now, who cares
 		true
 	));

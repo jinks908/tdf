@@ -18,7 +18,7 @@ use rayon::iter::ParallelIterator as _;
 
 use crate::{
 	renderer::{PageInfo, RenderError, fill_default},
-	skip::InterleavedAroundWithMax
+	skip::{InterleavedAroundWithMax, in_prerender_window}
 };
 
 #[derive(Debug)]
@@ -72,6 +72,7 @@ pub async fn run_conversion_loop(
 	receiver: Receiver<ConverterMsg>,
 	picker: Picker,
 	prerender: usize,
+	keep_window: Option<NonZeroUsize>,
 	shms_work: bool
 ) -> Result<(), SendError<Result<ConvertedPage, RenderError>>> {
 	let mut images = vec![];
@@ -221,7 +222,12 @@ pub async fn run_conversion_loop(
 		}))
 	}
 
-	fn handle_notif(msg: ConverterMsg, images: &mut Vec<Option<PageInfo>>, page: &mut usize) {
+	fn handle_notif(
+		msg: ConverterMsg,
+		images: &mut Vec<Option<PageInfo>>,
+		page: &mut usize,
+		keep_window: Option<NonZeroUsize>
+	) {
 		match msg {
 			ConverterMsg::AddImg(img) => {
 				let page_num = img.page_num;
@@ -231,7 +237,20 @@ pub async fn run_conversion_loop(
 				fill_default(images, n_pages);
 				*page = (*page).min(n_pages - 1);
 			}
-			ConverterMsg::GoToPage(new_page) => *page = new_page,
+			ConverterMsg::GoToPage(new_page) => {
+				*page = new_page;
+				// Drop the raw pages that the renderer no longer considers prerendered, so that
+				// memory doesn't grow with the size of the document
+				if let (Some(limit), Some(n_pages)) =
+					(keep_window, NonZeroUsize::new(images.len()))
+				{
+					for (idx, slot) in images.iter_mut().enumerate() {
+						if !in_prerender_window(idx, new_page, n_pages, limit) {
+							*slot = None;
+						}
+					}
+				}
+			}
 			ConverterMsg::ClearImgs => {
 				for slot in images.iter_mut() {
 					*slot = None;
@@ -245,7 +264,7 @@ pub async fn run_conversion_loop(
 		loop {
 			match receiver.try_recv() {
 				Ok(msg) => {
-					handle_notif(msg, &mut images, &mut page);
+					handle_notif(msg, &mut images, &mut page, keep_window);
 					continue 'outer;
 				}
 				Err(TryRecvError::Empty) => (),
@@ -272,7 +291,7 @@ pub async fn run_conversion_loop(
 			break;
 		};
 
-		handle_notif(msg, &mut images, &mut page);
+		handle_notif(msg, &mut images, &mut page, keep_window);
 	}
 
 	Ok(())

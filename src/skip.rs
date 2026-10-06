@@ -111,9 +111,53 @@ impl Iterator for InterleavedAroundWithMax {
 	}
 }
 
+/// Whether `page` is one of the first `limit` pages yielded by
+/// `InterleavedAroundWithMax::new(around, 0, n_pages)`, i.e. one of the pages that get prerendered
+/// around `around`. Pages outside of this window can be evicted from memory.
+#[must_use]
+pub fn in_prerender_window(
+	page: usize,
+	around: usize,
+	n_pages: NonZeroUsize,
+	limit: NonZeroUsize
+) -> bool {
+	let n = n_pages.get();
+	if limit.get() >= n {
+		return true;
+	}
+
+	// The iterator alternates +1, -1, +2, -2, ... wrapping at the ends of the document, so the
+	// first `limit` values reach `limit / 2` pages ahead and `(limit - 1) / 2` pages behind
+	let ahead = (page + n - around) % n;
+	let behind = (around + n - page) % n;
+	ahead <= limit.get() / 2 || behind <= (limit.get() - 1) / 2
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
+
+	#[test]
+	fn window_matches_iter() {
+		for n in 1..30 {
+			let n_pages = NonZeroUsize::new(n).unwrap();
+			for limit in 1..35 {
+				let limit = NonZeroUsize::new(limit).unwrap();
+				for around in 0..n {
+					let yielded = InterleavedAroundWithMax::new(around, 0, n_pages)
+						.take(limit.get())
+						.collect::<Vec<_>>();
+					for page in 0..n {
+						assert_eq!(
+							in_prerender_window(page, around, n_pages, limit),
+							yielded.contains(&page),
+							"page {page}, around {around}, n {n}, limit {limit}"
+						);
+					}
+				}
+			}
+		}
+	}
 
 	#[test]
 	fn iter_works() {

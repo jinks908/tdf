@@ -45,6 +45,8 @@ use tdf::{
 	tui::{BottomMessage, InputAction, MessageSetting, Tui}
 };
 
+const DEFAULT_PRERENDER: NonZeroUsize = NonZeroUsize::new(20).unwrap();
+
 // Dummy struct for easy errors in main
 struct WrappedErr(Cow<'static, str>);
 
@@ -110,7 +112,7 @@ async fn inner_main() -> Result<(), WrappedErr> {
 		/// Defaults to 50ms.
 		optional --reload-delay reload_delay: u64
 		/// The number of pages to prerender surrounding the currently-shown page; 0 means no
-		/// limit. By default, there is no limit.
+		/// limit (which can use a lot of memory on large documents). Defaults to 20.
 		optional -p,--prerender prerender: usize
 		/// Custom white color, specified in css format (e.g. "FFFFFF" or "rgb(255, 255, 255)")
 		optional -w,--white-color white: String
@@ -307,10 +309,14 @@ async fn inner_main() -> Result<(), WrappedErr> {
 	// then we want to spawn off the rendering task
 	// We need to use the thread::spawn API so that this exists in a thread not owned by tokio,
 	// since the methods we call in `start_rendering` will panic if called in an async context
-	let prerender = flags
-		.prerender
-		.and_then(NonZeroUsize::new)
-		.map_or(PrerenderLimit::All, PrerenderLimit::Limited);
+	let prerender = match flags.prerender {
+		None => PrerenderLimit::Limited(DEFAULT_PRERENDER),
+		Some(n) => NonZeroUsize::new(n).map_or(PrerenderLimit::All, PrerenderLimit::Limited)
+	};
+	let keep_window = match prerender {
+		PrerenderLimit::Limited(limit) => Some(limit),
+		PrerenderLimit::All => None
+	};
 
 	let file_path = path.clone();
 	std::thread::spawn(move || {
@@ -340,7 +346,12 @@ async fn inner_main() -> Result<(), WrappedErr> {
 	let shms_work = is_kitty && do_shms_work(&mut ev_stream).await;
 
 	tokio::spawn(run_conversion_loop(
-		to_main, from_main, picker, 20, shms_work
+		to_main,
+		from_main,
+		picker,
+		20,
+		keep_window,
+		shms_work
 	));
 
 	let file_name = path.file_name().map_or_else(
