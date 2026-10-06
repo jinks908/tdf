@@ -5,3 +5,4 @@ debug.log
 TODO.md
 .DS_Store
 build
+stage/
