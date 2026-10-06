@@ -4,6 +4,27 @@ Personal fork of [itsjunetime/tdf](https://github.com/itsjunetime/tdf).
 
 ## Changes from upstream
 
+### Fix: Bound page memory to the prerender window (memory leak)
+
+`tdf` rendered every page of the document by default and the converter
+kept each page's raw pixels until exit. On large PDFs this grew with page
+count, and zooming re-rendered every page at a larger size. A ~1,000-page
+novel reached ~26 GB.
+
+- Default `--prerender` to 20 pages instead of the whole document
+  (`-p 0` still renders everything)
+- Converter drops stored pages outside the prerender window when the
+  current page changes
+- Renderer marks those pages as unrendered so they are rendered again
+  when revisited
+- Keep the renderer's current page across hot reloads, so a reload
+  doesn't leave the current page blank under a limited window
+- Add `in_prerender_window()` and a test checking it against
+  `InterleavedAroundWithMax`
+
+**Tested by hand:** memory now levels off at ~1.2 GB zoomed and ~390 MB
+unzoomed.
+
 ### Feat: Jump to last page
 - Added to existing `G` keybinding (when not zoomed) to jump to the last page of the document -- `src/tui.rs:866`
 
